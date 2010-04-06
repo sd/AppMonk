@@ -2,6 +2,7 @@ package appmonk.widget;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -63,8 +64,8 @@ public class MultiLineLayout extends ViewGroup {
                 continue;
             }
 
-            final LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            
+            final MultiLineLayout.LayoutParams lp = (MultiLineLayout.LayoutParams) child.getLayoutParams();
+
             if (lp.width == 0 || lp.width == LayoutParams.FILL_PARENT)
                 lp.width = LayoutParams.WRAP_CONTENT;
             
