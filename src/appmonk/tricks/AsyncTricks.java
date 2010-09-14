@@ -54,11 +54,13 @@ public class AsyncTricks {
 
         abstract String label();
 
-        abstract void request();
+        public abstract boolean before();
+        
+        public abstract void request();
 
-        abstract void interrupted();
+        public abstract void interrupted();
 
-        abstract void after();
+        public abstract void after();
 
         protected AsyncRequest(int priority) {
             this.priority = priority;
@@ -158,12 +160,16 @@ public class AsyncTricks {
             return handler;
         }
 
-        abstract void request();
+        public boolean before() {
+            return true;
+        }
+        
+        public abstract void request();
 
-        void interrupted() {
+        public void interrupted() {
         }
 
-        void after() {
+        public void after() {
         }
 
         protected Object argument(int n) {
@@ -252,10 +258,15 @@ public class AsyncTricks {
                 request = null;
             }
             else {
-                if (AsyncTricks.verboseDebug) Log.d(TAG, "Queueing a request, getting a Wake Lock just in case");
-                AsyncTricks.getWakeLock(request.label());
-                namedRequests.add(request.label());
-                requestQueue.add(request);
+                if (request.before()) {
+                    if (AsyncTricks.verboseDebug) Log.d(TAG, "Queueing a request, getting a Wake Lock just in case");
+                    AsyncTricks.getWakeLock(request.label());
+                    namedRequests.add(request.label());
+                    requestQueue.add(request);
+                }
+                else {
+                    request = null;
+                }
             }
         }
 
