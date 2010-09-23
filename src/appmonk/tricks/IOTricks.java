@@ -22,8 +22,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 
 public class IOTricks {
 
@@ -66,5 +68,16 @@ public class IOTricks {
         fileIn.close();
         
         return object;
+    }
+    
+    public static int copyStreamToStream(InputStream in, OutputStream out, int bufferSize) throws IOException {
+        byte[] buffer = new byte[bufferSize];
+        int total = 0;
+        int len;
+        while ((len = in.read(buffer)) > 0) {
+            out.write(buffer, 0, len);
+            total += len;
+        }
+        return total;
     }
 }
