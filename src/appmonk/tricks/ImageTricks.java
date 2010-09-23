@@ -13,7 +13,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
+import android.widget.ImageView;
 
 /*
  * Copyright (C) 2009, 2010 Sebastian Delmont <sd@notso.net>
@@ -200,4 +202,70 @@ public class ImageTricks {
         }
     }
     
+    protected static Handler uiThreadHandler = null;
+    
+    public static class AsyncImageRequest extends AsyncTricks.AsyncRequest {
+        protected ImageRequest imageRequest;
+        protected ImageView imageView;
+        protected int defaultImageResource;
+        protected boolean loadedOk;
+        
+        public AsyncImageRequest(ImageRequest request, ImageView view, int defaultResource) {
+            super(AsyncTricks.INTERACTIVE);
+            
+            imageRequest = request;
+            imageView = view;
+            defaultImageResource = defaultResource;
+            
+            if (uiThreadHandler == null)
+                uiThreadHandler = new Handler();
+        }
+        
+        public AsyncImageRequest(String url, ImageView view) {
+            this(new ImageRequest(url), view, 0);
+        }
+        
+        public String label() {
+            return "loading " + imageRequest.sourceUrl;
+        }
+        
+        Handler handler() {
+            return uiThreadHandler;
+        }
+        
+        @Override
+        public boolean before() {
+            return true;
+        }
+
+        @Override
+        public void request() {
+            loadedOk = imageRequest.loadBitmap();
+        }
+
+        @Override
+        public void interrupted() {
+            if (defaultImageResource != 0)
+                imageView.setImageResource(defaultImageResource);
+            else
+                imageView.setImageBitmap(null);
+        }
+
+        @Override
+        public void after() {
+            if (loadedOk) {
+                imageView.setImageBitmap(imageRequest.bitmap);
+            }
+            else {
+                if (defaultImageResource != 0)
+                    imageView.setImageResource(defaultImageResource);
+                else
+                    imageView.setImageBitmap(null);
+            }
+        }
+
+        public void queue() {
+            AsyncTricks.queueRequest(AsyncTricks.INTERACTIVE, this);
+        }
+    }
 }
