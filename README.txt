@@ -20,5 +20,5 @@ HOW TO USE IN ECLIPSE:
 - Add the AppMonk Toolkit to your eclipse workspace
 - In your actual project, open the properties dialog, select the Android section,
   and in the bottom half list, "Add" the AppMonk Toolkit project as a library.
-- In the properties dialog, select the "Java Build Path", go to the "Projects" tab, 
-  and add the AppMonk Project
+- In the properties dialog, select the "Java Build Path", go to the "Source" tab,
+  click on "Link Folder" and select the "src" folder inside AppMonk.
