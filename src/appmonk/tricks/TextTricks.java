@@ -22,7 +22,22 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public class TextTricks {
-    public static String joinWithPrefix(String prefix, String[] list, String separator) {
+    public static String join(List<String> list, String separator) {
+        StringBuffer join = new StringBuffer();
+        int count = list.size();
+        for (int i = 0; i < count; i++) {
+            if (i == 0) {
+                // nothing
+            }
+            else {
+                join.append(separator);
+            }
+            join.append(list.get(i));
+        }
+        return join.toString();
+    }
+    
+    public static String joinWithPrefix(String prefix, Object[] list, String separator) {
         StringBuffer join = new StringBuffer();
         int count = list.length;
         for (int i = 0; i < count; i++) {
