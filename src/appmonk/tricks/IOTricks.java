@@ -23,9 +23,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 
 public class IOTricks {
 
@@ -70,6 +72,10 @@ public class IOTricks {
         return object;
     }
     
+    public static int copyStreamToStream(InputStream in, OutputStream out) throws IOException {
+        return copyStreamToStream(in, out, 1024);
+    }
+
     public static int copyStreamToStream(InputStream in, OutputStream out, int bufferSize) throws IOException {
         byte[] buffer = new byte[bufferSize];
         int total = 0;
@@ -79,5 +85,33 @@ public class IOTricks {
             total += len;
         }
         return total;
+    }
+
+    public static int copyStreamToStringBuffer(InputStream in, StringBuffer sb) throws IOException {
+        return copyStreamToStringBuffer(in, sb, 1024);
+    }
+    
+    public static int copyStreamToStringBuffer(InputStream in, StringBuffer sb, int bufferSize) throws IOException {
+        Reader inReader = new InputStreamReader(in, "UTF-8");
+        
+        char[] buffer = new char[bufferSize];
+        int total = 0;
+        int len;
+        while ((len = inReader.read(buffer)) > 0) {
+            sb.append(buffer, 0, len);
+            total += len;
+        }
+        return total;
+    }
+    
+    public static String StreamToString(InputStream in) {
+        StringBuffer sb = new StringBuffer();
+        try {
+            copyStreamToStringBuffer(in, sb);
+        }
+        catch (IOException e) {
+            return null;
+        }
+        return sb.toString();
     }
 }
