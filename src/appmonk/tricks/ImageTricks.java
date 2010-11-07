@@ -14,6 +14,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -105,12 +106,19 @@ public class ImageTricks {
         Bitmap bitmap = null;
         
         public ImageRequest(String url) {
-            sourceUrl = url;
-            cacheName = IOTricks.sanitizeFileName(url);
+            if (TextUtils.isEmpty(url)) {
+                sourceUrl = null;
+                cacheName = null;
+            }
+            else {
+                sourceUrl = url;
+                cacheName = IOTricks.sanitizeFileName(url);
+            }
         }
 
         public ImageRequest setCacheSuffix(String suffix) {
-            cacheName = IOTricks.sanitizeFileName(sourceUrl) + "-" + suffix;
+            if (sourceUrl != null)
+                cacheName = IOTricks.sanitizeFileName(sourceUrl) + "-" + suffix;
             return this;
         }
         
@@ -126,6 +134,9 @@ public class ImageTricks {
         }
         
         public boolean isCached() {
+            if (cacheName == null)
+                return false;
+            
             if (cacheFile == null)
                 cacheFile = new File(cachePath + cacheName);
             return cacheFile.canRead();
@@ -133,7 +144,7 @@ public class ImageTricks {
 
         public boolean loadFromSource() {
             try {
-                if (sourceUrl != null && !"".equals(sourceUrl)) {
+                if (!TextUtils.isEmpty(sourceUrl)) {
                     URL url = new URL(sourceUrl);
                     InputStream is = (InputStream) url.openStream();
                     if (is != null) {
@@ -154,7 +165,7 @@ public class ImageTricks {
 
         public boolean downloadSourceToCache() {
             try {
-                if (sourceUrl != null && !"".equals(sourceUrl)) {
+                if (!TextUtils.isEmpty(sourceUrl)) {
                     URL url = new URL(sourceUrl);
 
                     cacheName = cacheName.toLowerCase();
