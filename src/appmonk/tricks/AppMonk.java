@@ -1,13 +1,12 @@
 package appmonk.tricks;
 
+import android.content.ContentResolver;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.preference.PreferenceManager;
 
 public class AppMonk {
     protected static Context applicationContext = null;

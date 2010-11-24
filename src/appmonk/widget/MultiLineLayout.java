@@ -52,9 +52,12 @@ public class MultiLineLayout extends ViewGroup {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        @SuppressWarnings("unused")
         final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         final int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        @SuppressWarnings("unused")
         final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        @SuppressWarnings("unused")
         final int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
         final int paddingLeft = getPaddingLeft();
@@ -112,6 +115,7 @@ public class MultiLineLayout extends ViewGroup {
         final int paddingLeft = getPaddingLeft();
         final int paddingTop = getPaddingTop();
         final int paddingRight = getPaddingRight();
+        @SuppressWarnings("unused")
         final int paddingBottom = getPaddingBottom();
 
         int currentLineLeft = paddingLeft;
