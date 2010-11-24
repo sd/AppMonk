@@ -18,6 +18,7 @@ package appmonk.tricks;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -114,4 +115,31 @@ public class IOTricks {
         }
         return sb.toString();
     }
+
+    public static byte[] StreamToBytes(InputStream in) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            copyStreamToStream(in, out);
+        }
+        catch (IOException e) {
+            return null;
+        }
+        return out.toByteArray();
+    }
+    
+    public static int countBytesInStream(InputStream in) {
+        try {
+            byte[] buffer = new byte[32 * 1024];
+            int total = 0;
+            int len;
+            while ((len = in.read(buffer)) > 0) {
+                total += len;
+            }
+            return total;
+        }
+        catch (IOException e) {
+            return 0;
+        }
+    }
+
 }
