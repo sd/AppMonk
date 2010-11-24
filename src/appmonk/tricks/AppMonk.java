@@ -70,4 +70,14 @@ public class AppMonk {
             return null;
         }
     }
+
+    protected static ContentResolver contentResolver = null;
+
+    public static ContentResolver getContentResolver() {
+        if (contentResolver == null) {
+            contentResolver = applicationContext.getContentResolver();
+        }
+        return contentResolver;
+    }
+
 }
