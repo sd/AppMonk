@@ -41,38 +41,38 @@ public class IOTricks {
         }
         return fileName;
     }
-    
+
     public static void saveObject(Object object, File fileName) throws IOException {
         File tempFileName = new File(fileName.toString() + "-tmp");
 
         FileOutputStream fileOut = new FileOutputStream(tempFileName);
         BufferedOutputStream buffdOut = new BufferedOutputStream(fileOut, 32 * 1024);
         ObjectOutputStream objectOut = new ObjectOutputStream(buffdOut);
-        
+
         objectOut.writeObject(object);
-        
+
         objectOut.close();
         buffdOut.close();
         fileOut.close();
-        
+
         fileName.delete();
         tempFileName.renameTo(fileName);
     }
-    
+
     public static Object loadObject(File fileName) throws IOException, ClassNotFoundException {
         FileInputStream fileIn = new FileInputStream(fileName);
         BufferedInputStream buffdIn = new BufferedInputStream(fileIn, 32 * 1024);
         ObjectInputStream objectIn = new ObjectInputStream(buffdIn);
-        
+
         Object object = objectIn.readObject();
-        
+
         objectIn.close();
         buffdIn.close();
         fileIn.close();
-        
+
         return object;
     }
-    
+
     public static int copyStreamToStream(InputStream in, OutputStream out) throws IOException {
         return copyStreamToStream(in, out, 1024);
     }
@@ -91,10 +91,10 @@ public class IOTricks {
     public static int copyStreamToStringBuffer(InputStream in, StringBuffer sb) throws IOException {
         return copyStreamToStringBuffer(in, sb, 1024);
     }
-    
+
     public static int copyStreamToStringBuffer(InputStream in, StringBuffer sb, int bufferSize) throws IOException {
         Reader inReader = new InputStreamReader(in, "UTF-8");
-        
+
         char[] buffer = new char[bufferSize];
         int total = 0;
         int len;
@@ -104,7 +104,7 @@ public class IOTricks {
         }
         return total;
     }
-    
+
     public static String StreamToString(InputStream in) {
         StringBuffer sb = new StringBuffer();
         try {
@@ -126,7 +126,7 @@ public class IOTricks {
         }
         return out.toByteArray();
     }
-    
+
     public static int countBytesInStream(InputStream in) {
         try {
             byte[] buffer = new byte[32 * 1024];

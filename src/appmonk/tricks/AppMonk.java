@@ -7,6 +7,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import appmonk.image.ImageCache;
 
 public class AppMonk {
     protected static Context applicationContext = null;
@@ -15,14 +16,16 @@ public class AppMonk {
     public static String versionName = null;
     public static int versionCode = 0;
     
-    public static float screenDensity;
-    public static float textScale;
+    public static float screenDensity = 1.0f;
+    public static float textScale = 1.0f;
 
     
     public static void setContext(Context context) {
         if (applicationContext == null) {
             applicationContext = context.getApplicationContext();
 
+            ImageCache.setContext(context);
+            
             PackageInfo packageInfo;
             try {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
