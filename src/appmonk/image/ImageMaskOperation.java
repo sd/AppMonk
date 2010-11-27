@@ -31,12 +31,10 @@ public class ImageMaskOperation extends ImageRequest.Operation {
 
     @Override
     public Bitmap perform(Bitmap previousBitmap) {
-        Log.d(TAG, "mask for " + request.name());
         Bitmap maskBitmap = AppMonk.getBitmap(resourceId);
 
         synchronized (maskBitmap) {
             if (maskBitmap != null) {
-                Log.d(TAG, "-- mask 1 for " + request.name() + " " + maskBitmap.getWidth());
                 int w = previousBitmap.getWidth();
                 int h = previousBitmap.getHeight();
     
@@ -49,7 +47,6 @@ public class ImageMaskOperation extends ImageRequest.Operation {
                 }
     
                 if (combinedBitmap != null) {
-                    Log.d(TAG, "-- mask 2 for " + request.name() + " " + combinedBitmap.getWidth());
                     Canvas canvas = new Canvas(combinedBitmap);
     
                     canvas.drawBitmap(previousBitmap, 0, 0, null);

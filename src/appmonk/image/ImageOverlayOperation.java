@@ -21,12 +21,10 @@ public class ImageOverlayOperation extends ImageRequest.Operation {
 
     @Override
     public Bitmap perform(Bitmap previousBitmap) {
-        Log.d(TAG, "overlay for " + request.name());
         Bitmap overlayBitmap = AppMonk.getBitmap(resourceId);
 
         synchronized (overlayBitmap) {
             if (overlayBitmap != null) {
-                Log.d(TAG, "-- overlay 1 for " + request.name() + " " + overlayBitmap.getWidth());
                 Bitmap combinedBitmap = null;
                 try {
                     combinedBitmap = Bitmap.createBitmap(previousBitmap.getWidth(), previousBitmap.getHeight(), Bitmap.Config.ARGB_8888);
@@ -36,7 +34,6 @@ public class ImageOverlayOperation extends ImageRequest.Operation {
                 }
     
                 if (combinedBitmap != null) {
-                    Log.d(TAG, "-- overlay 2 for " + request.name() + " " + combinedBitmap.getWidth());
                     Canvas canvas = new Canvas(combinedBitmap);
                     canvas.drawBitmap(previousBitmap, 0, 0, null);
                     canvas.drawBitmap(overlayBitmap, left, top, null);
