@@ -56,6 +56,11 @@ public class ImageRequest {
         return this;
     }
     
+    public ImageRequest resource(int id) {
+        addOperation(new ImageResourceOperation(this, id));
+        return this;
+    }
+    
     public ImageRequest widthInDips(int w) {
         addOperation(new ImageScalingOperation(this, w, ImageScalingOperation.PROPORTIONAL));
         return this;
@@ -68,6 +73,26 @@ public class ImageRequest {
 
     public ImageRequest roundCorners(int r) {
         addOperation(new ImageRoundCornersOperation(this, r));
+        return this;
+    }
+
+    public ImageRequest overlay(int id, int top, int left) {
+        addOperation(new ImageOverlayOperation(this, id, top, left));
+        return this;
+    }
+
+    public ImageRequest overlay(int id) {
+        addOperation(new ImageOverlayOperation(this, id, 0, 0));
+        return this;
+    }
+
+    public ImageRequest mask(int id, int top, int left) {
+        addOperation(new ImageMaskOperation(this, id, top, left));
+        return this;
+    }
+
+    public ImageRequest mask(int id) {
+        addOperation(new ImageMaskOperation(this, id, 0, 0));
         return this;
     }
 
