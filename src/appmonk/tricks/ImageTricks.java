@@ -1,7 +1,10 @@
 package appmonk.tricks;
 
+import java.util.HashMap;
+
 import android.graphics.Bitmap;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.ImageView;
 import appmonk.image.ImageRequest;
 
@@ -15,6 +18,8 @@ public class ImageTricks {
         protected int defaultImageResource;
         protected Bitmap bitmap = null;
         
+        protected static HashMap<String, String> assignedRequests = new HashMap<String, String>();
+        
         public AsyncImageRequest(ImageRequest request, ImageView view, int defaultResource) {
             super(AsyncTricks.INTERACTIVE);
             
@@ -24,6 +29,12 @@ public class ImageTricks {
             
             if (uiThreadHandler == null)
                 uiThreadHandler = new Handler();
+            
+            synchronized (assignedRequests) {
+                String viewName = Integer.toString(view.hashCode());
+                String requestName = imageRequest.name();
+                assignedRequests.put(viewName, requestName);
+            }
         }
         
         public AsyncImageRequest(ImageRequest request, ImageView view) {
@@ -39,7 +50,7 @@ public class ImageTricks {
         }
         
         public String label() {
-            return "loading image " + imageRequest.name();
+            return "loading image " + imageRequest.name() + " for view " + imageView.hashCode();
         }
         
         Handler handler() {
@@ -58,22 +69,49 @@ public class ImageTricks {
 
         @Override
         public void interrupted() {
-            if (defaultImageResource != 0)
-                imageView.setImageResource(defaultImageResource);
-            else
-                imageView.setImageBitmap(null);
-        }
+            boolean stillMatchesRequest = false;
 
-        @Override
-        public void after() {
-            if (bitmap != null) {
-                imageView.setImageBitmap(bitmap);
+            synchronized (assignedRequests) {
+                String viewName = Integer.toString(imageView.hashCode());
+                String requestName = imageRequest.name();
+                String assignedName = assignedRequests.remove(viewName);
+                if (assignedName != null && assignedName.equals(requestName)) {
+                    stillMatchesRequest = true;
+                }
             }
-            else {
+
+            if (stillMatchesRequest) {
                 if (defaultImageResource != 0)
                     imageView.setImageResource(defaultImageResource);
                 else
                     imageView.setImageBitmap(null);
+            }
+        }
+
+        @Override
+        public void after() {
+            boolean stillMatchesRequest = false;
+            
+            synchronized (assignedRequests) {
+                String viewName = Integer.toString(imageView.hashCode());
+                String requestName = imageRequest.name();
+                String assignedName = assignedRequests.remove(viewName);
+                if (assignedName != null && assignedName.equals(requestName)) {
+                    stillMatchesRequest = true;
+                }
+            }
+
+            if (stillMatchesRequest) {
+                if (bitmap != null) {
+                    Log.d("XXX", "Image " + imageRequest.name() + " loaded onto " + imageView);
+                    imageView.setImageBitmap(bitmap);
+                }
+                else {
+                    if (defaultImageResource != 0)
+                        imageView.setImageResource(defaultImageResource);
+                    else
+                        imageView.setImageBitmap(null);
+                }
             }
         }
 

@@ -21,6 +21,9 @@ public class ImageOverlayOperation extends ImageRequest.Operation {
 
     @Override
     public Bitmap perform(Bitmap previousBitmap) {
+        if (previousBitmap == null)
+            return null;
+        
         Bitmap overlayBitmap = AppMonk.getBitmap(resourceId);
 
         synchronized (overlayBitmap) {

@@ -22,6 +22,9 @@ public class ImageScalingOperation extends ImageRequest.Operation {
     public Bitmap perform(Bitmap previousBitmap) {
         Bitmap bitmap = previousBitmap;
         
+        if (previousBitmap == null)
+            return null;
+        
         if (widthInDips > 0) {
             int widthInPixels = (int) (widthInDips * AppMonk.screenDensity);
             if (previousBitmap.getWidth() != widthInPixels) {

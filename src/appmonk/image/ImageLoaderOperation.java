@@ -70,7 +70,6 @@ public class ImageLoaderOperation extends ImageRequest.Operation {
                     bitmap = BitmapFactory.decodeStream(is);
                     is.close();
                 }
-                Log.d(TAG, "Loaded image from " + url);
                 return bitmap;
             }
         } 
@@ -102,7 +101,6 @@ public class ImageLoaderOperation extends ImageRequest.Operation {
                     cacheFile.delete();
                 tempFile.renameTo(cacheFile);
                 
-                Log.d(TAG, "Loaded image to cache from " + url);
                 return true;
             }
         } 
@@ -120,7 +118,6 @@ public class ImageLoaderOperation extends ImageRequest.Operation {
         if (cacheFile.canRead()) {
             try {
                 bitmap = BitmapFactory.decodeFile(cacheFile.toString());
-                Log.d(TAG, "Loaded cached image for " + url);
                 ImageCache.touch(cacheFile);
             } 
             catch (OutOfMemoryError e) {

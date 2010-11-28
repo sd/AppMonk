@@ -31,6 +31,9 @@ public class ImageMaskOperation extends ImageRequest.Operation {
 
     @Override
     public Bitmap perform(Bitmap previousBitmap) {
+        if (previousBitmap == null)
+            return null;
+        
         Bitmap maskBitmap = AppMonk.getBitmap(resourceId);
 
         synchronized (maskBitmap) {

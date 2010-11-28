@@ -22,6 +22,9 @@ public class ImageRoundCornersOperation extends ImageRequest.Operation {
 
     @Override
     public Bitmap perform(Bitmap previousBitmap) {
+        if (previousBitmap == null)
+            return null;
+        
         Bitmap output = null;
         int w = previousBitmap.getWidth();
         int h = previousBitmap.getHeight();
