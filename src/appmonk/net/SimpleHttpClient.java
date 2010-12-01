@@ -108,7 +108,7 @@ public class SimpleHttpClient {
     public static int PUT = 3;
     public static int DELETE = 4;
 
-    public class Response implements Serializable {
+    public static class Response implements Serializable {
         private static final long serialVersionUID = 1L;
 
         transient HttpResponse httpResponse = null;
@@ -123,7 +123,7 @@ public class SimpleHttpClient {
             if (body == null) {
                 try {
                     HttpEntity entity = httpResponse.getEntity();
-                    body = streamToString(entity.getContent());
+                    body = SimpleHttpClient.streamToString(entity.getContent());
                     entity.consumeContent();
                 }
                 catch (OutOfMemoryError e) {
@@ -220,6 +220,10 @@ public class SimpleHttpClient {
         public boolean isUnprocessable() {
             return status() == 422;
         }
+    }
+    
+    protected static Response defaultResponse() {
+        return new Response();
     }
 
     protected static final int MAX_TOTAL_CONNECTIONS = 8;
@@ -391,7 +395,7 @@ public class SimpleHttpClient {
         HttpClient httpClient = getHttpClient();
 
         if (response == null)
-            response = new Response();
+            response = defaultResponse();
         
         try {
             response.uri = request.getURI();
@@ -517,7 +521,7 @@ public class SimpleHttpClient {
         }
     }
 
-    public String streamToString(InputStream is) {
+    public static String streamToString(InputStream is) {
         InputStreamReader reader = new InputStreamReader(is);
 
         StringBuilder sb = new StringBuilder();
