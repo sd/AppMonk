@@ -30,8 +30,10 @@ public class ImageLoaderOperation extends ImageRequest.Operation {
         catch (MalformedURLException e) {
             this.url = null;
         }
-        cacheName = request.cacheNameFor(url);
-        cacheFile = request.cacheFileFor(cacheName);
+        if (url != null) {
+            cacheName = request.cacheNameFor(url);
+            cacheFile = request.cacheFileFor(cacheName);
+        }
     }
 
     @Override
@@ -93,6 +95,7 @@ public class ImageLoaderOperation extends ImageRequest.Operation {
                 BufferedInputStream bis = new BufferedInputStream(is, BUFFER_SIZE);
                 FileOutputStream cacheOut = new FileOutputStream(tempFile);
                 IOTricks.copyStreamToStream(bis, cacheOut, BUFFER_SIZE);
+                cacheOut.getFD().sync();
                 cacheOut.close();
                 bis.close();
                 is.close();

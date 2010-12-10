@@ -68,6 +68,7 @@ public class ImageCachingOperation extends ImageRequest.Operation {
 
                 FileOutputStream cacheOut = new FileOutputStream(tempFile);
                 bitmap.compress(CompressFormat.PNG, 100, cacheOut);
+                cacheOut.getFD().sync();
                 cacheOut.close();
                 
                 if (cacheFile.canRead())

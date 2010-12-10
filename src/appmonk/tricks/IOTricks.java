@@ -50,9 +50,9 @@ public class IOTricks {
         ObjectOutputStream objectOut = new ObjectOutputStream(buffdOut);
 
         objectOut.writeObject(object);
-
         objectOut.close();
         buffdOut.close();
+        fileOut.getFD().sync();
         fileOut.close();
 
         fileName.delete();
