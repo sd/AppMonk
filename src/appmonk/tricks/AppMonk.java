@@ -12,6 +12,7 @@ import appmonk.image.ImageCache;
 public class AppMonk {
     protected static Context applicationContext = null;
 
+    public static String applicationName = null;
     public static String packageName = null;
     public static String versionName = null;
     public static int versionCode = 0;
@@ -30,6 +31,7 @@ public class AppMonk {
             try {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
 
+                applicationName = packageInfo.applicationInfo.name;
                 packageName = context.getPackageName();
                 versionName = packageInfo.versionName;
                 versionCode = packageInfo.versionCode;
