@@ -29,6 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.SyncFailedException;
 
 public class IOTricks {
 
@@ -52,7 +53,12 @@ public class IOTricks {
         objectOut.writeObject(object);
         objectOut.close();
         buffdOut.close();
-        fileOut.getFD().sync();
+        try {
+            fileOut.getFD().sync();
+        }
+        catch (SyncFailedException e) {
+            // ignore
+        }
         fileOut.close();
 
         fileName.delete();

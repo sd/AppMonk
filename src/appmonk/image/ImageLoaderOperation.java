@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SyncFailedException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -95,7 +96,12 @@ public class ImageLoaderOperation extends ImageRequest.Operation {
                 BufferedInputStream bis = new BufferedInputStream(is, BUFFER_SIZE);
                 FileOutputStream cacheOut = new FileOutputStream(tempFile);
                 IOTricks.copyStreamToStream(bis, cacheOut, BUFFER_SIZE);
-                cacheOut.getFD().sync();
+                try {
+                    cacheOut.getFD().sync();
+                }
+                catch (SyncFailedException e) {
+                    // ignore
+                }
                 cacheOut.close();
                 bis.close();
                 is.close();
