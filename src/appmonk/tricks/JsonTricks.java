@@ -19,9 +19,13 @@ package appmonk.tricks;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import android.text.TextUtils;
+
 public class JsonTricks {
     public static String getString(JSONObject json, String... path) {
-        json = getJSONObject(json, path, 0, path.length - 1);
+        if (path.length > 1) {
+            json = getJSONObject(json, path, 0, path.length - 1);
+        }
         if (json != null) {
             return json.optString(path[path.length - 1]);
         }
@@ -29,15 +33,44 @@ public class JsonTricks {
     }
 
     public static long getLong(JSONObject json, long defaultValue, String... path) {
-        json = getJSONObject(json, path, 0, path.length - 1);
+        if (path.length > 1) {
+            json = getJSONObject(json, path, 0, path.length - 1);
+        }
         if (json != null) {
             return json.optLong(path[path.length - 1], defaultValue);
         }
         return defaultValue;
     }
 
+    public static boolean getBoolean(JSONObject json, String... path) {
+        return getBoolean(json, false, path);
+    }
+    
+    public static boolean getBoolean(JSONObject json, boolean defaultValue, String... path) {
+        if (path.length > 1) {
+            json = getJSONObject(json, path, 0, path.length - 1);
+        }
+        if (json != null) {
+            return json.optBoolean(path[path.length - 1], defaultValue);
+        }
+        return defaultValue;
+//       
+//        String value = getString(json, path);
+//        if (value == null) {
+//            return defaultValue;
+//        }
+//        else if (value.equals("1") || value.toLowerCase().equals("true")) {
+//            return true;
+//        }
+//        else {
+//            return false;
+//        }
+    }
+
     public static JSONArray getJSONArray(JSONObject json, String... path) {
-        json = getJSONObject(json, path, 0, path.length - 1);
+        if (path.length > 1) {
+            json = getJSONObject(json, path, 0, path.length - 1);
+        }
         if (json != null) {
             return json.optJSONArray(path[path.length - 1]);
         }
