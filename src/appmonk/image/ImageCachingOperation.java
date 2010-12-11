@@ -3,6 +3,7 @@ package appmonk.image;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.SyncFailedException;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -68,7 +69,12 @@ public class ImageCachingOperation extends ImageRequest.Operation {
 
                 FileOutputStream cacheOut = new FileOutputStream(tempFile);
                 bitmap.compress(CompressFormat.PNG, 100, cacheOut);
-                cacheOut.getFD().sync();
+                try {
+                    cacheOut.getFD().sync();
+                }
+                catch (SyncFailedException e) {
+                    // ignore
+                }
                 cacheOut.close();
                 
                 if (cacheFile.canRead())
