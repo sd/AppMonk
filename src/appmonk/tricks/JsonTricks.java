@@ -70,7 +70,7 @@ public class JsonTricks {
     public static JSONArray getJSONArray(JSONObject json, String... path) {
         if (path.length > 1) {
             json = getJSONObject(json, path, 0, path.length - 1);
-        }
+        } 
         if (json != null) {
             return json.optJSONArray(path[path.length - 1]);
         }
