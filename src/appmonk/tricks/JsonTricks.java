@@ -19,8 +19,6 @@ package appmonk.tricks;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import android.text.TextUtils;
-
 public class JsonTricks {
     public static String getString(JSONObject json, String... path) {
         if (path.length > 1) {
