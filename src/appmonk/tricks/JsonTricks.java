@@ -16,6 +16,8 @@ package appmonk.tricks;
  * 
  */
 
+import java.util.Calendar;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -52,17 +54,36 @@ public class JsonTricks {
             return json.optBoolean(path[path.length - 1], defaultValue);
         }
         return defaultValue;
-//       
-//        String value = getString(json, path);
-//        if (value == null) {
-//            return defaultValue;
-//        }
-//        else if (value.equals("1") || value.toLowerCase().equals("true")) {
-//            return true;
-//        }
-//        else {
-//            return false;
-//        }
+    }
+
+    public static Calendar getTime(JSONObject json, String... path) {
+        String timeString = getString(json, path);
+        if (timeString != null) {
+            return TimeTricks.isoStringToCalendar(timeString, null);
+        }
+        
+        return null;
+    }
+    
+    public static Calendar getIsoTime(JSONObject json, String... path) {
+        String timeString = getString(json, path);
+        if (timeString != null) {
+            return TimeTricks.isoStringToCalendar(timeString, null);
+        }
+        
+        return null;
+    }
+    
+    public static long getIsoTimeInMillis(JSONObject json, String... path) {
+        String timeString = getString(json, path);
+        if (timeString != null) {
+            Calendar cal = TimeTricks.isoStringToCalendar(timeString, null);
+            if (cal != null) {
+                return cal.getTimeInMillis();
+            }
+        }
+        
+        return -1;
     }
 
     public static JSONArray getJSONArray(JSONObject json, String... path) {
