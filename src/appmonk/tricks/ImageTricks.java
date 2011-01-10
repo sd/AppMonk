@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import appmonk.image.ImageRequest;
 
 
+@SuppressWarnings("unused")
 public class ImageTricks {
     protected static Handler uiThreadHandler = null;
     
@@ -59,7 +60,24 @@ public class ImageTricks {
         
         @Override
         public boolean before() {
-            return true;
+            if (imageRequest.isInMemory()) {
+                bitmap = imageRequest.getBitmap();
+                if (bitmap != null)
+                    imageView.setImageBitmap(bitmap);
+                else if (defaultImageResource != 0)
+                    imageView.setImageResource(defaultImageResource);
+                else
+                    imageView.setImageBitmap(null);
+                return false;
+            }
+            else {
+                if (defaultImageResource != 0)
+                    imageView.setImageResource(defaultImageResource);
+                else
+                    imageView.setImageBitmap(null);
+    
+                return true;
+            }
         }
 
         @Override
@@ -103,7 +121,7 @@ public class ImageTricks {
 
             if (stillMatchesRequest) {
                 if (bitmap != null) {
-                    Log.d("XXX", "Image " + imageRequest.name() + " loaded onto " + imageView);
+                    // Log.d("XXX", "Image " + imageRequest.name() + " loaded onto " + imageView);
                     imageView.setImageBitmap(bitmap);
                 }
                 else {

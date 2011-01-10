@@ -124,13 +124,29 @@ public class ImageRequest {
         return true;
     }
     
+    public boolean isCached() {
+        if (operations.size() > 0) 
+            return operations.get(operations.size() - 1).isCached();
+        else
+            return false;
+    }
+    
+    public boolean isInMemory() {
+        if (operations.size() > 0) 
+            return operations.get(operations.size() - 1).isInMemory();
+        else
+            return false;
+    }
+    
     public Bitmap getBitmap() {
         Bitmap bitmap = null;
+        ImageRequest.Operation op;
         int pos;
         
         pos = operations.size() - 1;
         while (pos > 0) {
-            if (operations.get(pos).isCached()) {
+            op = operations.get(pos);
+            if (op.isInMemory() || op.isCached()) {
                 break;
             }
             else {
@@ -198,6 +214,7 @@ public class ImageRequest {
 
         public boolean isExpensive() { return true; }
         public boolean isCached() { return false; }
+        public boolean isInMemory() { return false; }
         public abstract Bitmap perform(Bitmap previousBitmap);
         public String name(String previousName) { return previousName; };
     }

@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.SyncFailedException;
+import java.lang.ref.SoftReference;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,6 +18,8 @@ public class ImageCachingOperation extends ImageRequest.Operation {
 
     protected static final int BUFFER_SIZE = 64 * 1024; // 64KB
 
+    protected static Map<String, SoftReference<Bitmap>> memoryCache = new HashMap<String, SoftReference<Bitmap>>();
+    
     String cacheName = null;
     File cacheFile = null;
     
@@ -62,7 +67,14 @@ public class ImageCachingOperation extends ImageRequest.Operation {
         return cacheFile.canRead();
     }
 
+    public boolean isInMemory() {
+        SoftReference<Bitmap> ref = memoryCache.get(cacheName);
+        return (ref != null && ref.get() != null);
+    }
+    
     public boolean saveToCache(Bitmap bitmap) {
+        memoryCache.put(cacheName, new SoftReference<Bitmap>(bitmap));
+        
         try {
             if (bitmap != null) {
                 File tempFile = new File(cacheFile + "-tmp");
@@ -96,11 +108,17 @@ public class ImageCachingOperation extends ImageRequest.Operation {
 
     public Bitmap loadFromCache() {
         Bitmap bitmap = null;
-        if (cacheFile.canRead()) {
+        
+        SoftReference<Bitmap> ref = memoryCache.get(cacheName);
+        if (ref != null)
+            bitmap = ref.get();
+
+        if (bitmap == null && cacheFile.canRead()) {
             try {
                 bitmap = BitmapFactory.decodeFile(cacheFile.toString());
-                Log.d(TAG, "Loaded cached image for " + cacheName);
+                memoryCache.put(cacheName, new SoftReference<Bitmap>(bitmap));
                 ImageCache.touch(cacheFile);
+                Log.d(TAG, "Loaded cached image for " + cacheName);
             } 
             catch (OutOfMemoryError e) {
                 Log.e(TAG, "Out of memory loading image " + cacheName + " from file cache", e);
