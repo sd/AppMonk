@@ -1,9 +1,18 @@
 package appmonk.tricks;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.ImageView;
 import appmonk.image.ImageRequest;
@@ -137,4 +146,76 @@ public class ImageTricks {
             AsyncTricks.queueRequest(AsyncTricks.INTERACTIVE, this);
         }
     }
+    
+    
+    public static Bitmap scaleDownBitmap(Bitmap original, int minDimension, boolean recycleOriginal) {
+    	int origWidth = original.getWidth();
+    	int origHeight = original.getHeight();
+    	
+    	if (origWidth <= minDimension && origHeight <= minDimension) {
+    		Bitmap b = Bitmap.createBitmap(original);
+    		if (recycleOriginal)
+    			original.recycle();
+    		return b;
+    	}
+    	
+    	int newWidth = 0;
+    	int newHeight = 0;
+    	
+    	float ratio = (float)origHeight / (float)origWidth;
+    	
+    	if (origWidth > origHeight) {
+    		newWidth = minDimension;
+    		newHeight = (int)((float)newWidth * ratio);
+    	} else {
+    		newHeight = minDimension;
+    		newWidth = (int)((float)newHeight / ratio);
+    	}
+    	
+    	Bitmap rtr = Bitmap.createScaledBitmap(original, newWidth, newHeight, false);
+    	if (recycleOriginal)
+    		original.recycle();
+    	return rtr;
+    }
+    
+    public static void scaleDownImageFile(File originalImageFile, int minDimension, CompressFormat format, int quality) {
+    	Bitmap b = BitmapFactory.decodeFile(originalImageFile.getAbsolutePath());
+    	if (b == null)
+    		throw new RuntimeException("Original image could not be decoded.");
+    	
+    	try {
+	    	b = scaleDownBitmap(b, minDimension, true);
+	    	originalImageFile.delete();
+	    	originalImageFile.createNewFile();
+	    	BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(originalImageFile));
+	    	b.compress(format, quality, outputStream);
+	    	outputStream.close();
+    	} catch (Exception e) {
+    		throw new RuntimeException(e);
+    	}
+    }
+    
+    public static Uri scaleDownImageUri(Uri imageUri, int minDimension, CompressFormat format, int quality) {
+    	try {
+	    	InputStream mediaStream = AppMonk.getContentResolver().openInputStream(imageUri);
+	    	Bitmap b = BitmapFactory.decodeStream(mediaStream);
+	    	mediaStream.close();
+	    	b = scaleDownBitmap(b, minDimension, true);
+	    	
+	    	File tmpFile = new File(Environment.getExternalStorageDirectory(), "scaledImage." + (format == CompressFormat.JPEG ? "jpg" : "png"));
+	    	tmpFile.createNewFile();
+	    	BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(tmpFile));
+	    	b.compress(format, quality, outputStream);
+	    	
+	    	outputStream.close();
+	    	b.recycle();
+	    	
+	    	Uri rtr = Uri.parse(MediaStore.Images.Media.insertImage(AppMonk.getContentResolver(), tmpFile.getAbsolutePath(), null, null));
+	    	tmpFile.delete();
+	    	return rtr;
+    	} catch (Exception e) {
+    		throw new RuntimeException(e);
+    	}
+    }
+
 }
