@@ -499,7 +499,14 @@ public class SimpleHttpClient {
     }
 
     public Response requestWithUpload(int method, String baseUri, String path, Map<String, String> params, String attachmentName, Uri attachmentData, String attachmentType) {
-        return request(method, baseUri, path, params, null);
+//        return request(method, baseUri, path, params, null);
+        try {
+            return request(method, baseUri, path, mapToUploadEntity(params, attachmentName, attachmentData, attachmentType));
+        }
+        catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "Error encoding parameters", e);
+            return null;
+        }
     }
     
     public Response requestWithUpload(int method, String baseUri, String path, Map<String, String> params, String attachmentName, Uri attachmentData, String attachmentType, Response response) {
