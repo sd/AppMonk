@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -37,6 +38,7 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
@@ -60,6 +62,8 @@ public class CropImage extends MonitoredActivity {
     public static final String EXTRA_SCALE = "scale";
     public static final String EXTRA_SCALE_UP_IF_NEEDED = "scaleUpIfNeeded";
     public static final String EXTRA_SAVE_QUALITY = "saveQuality";
+    
+    private static final int DIALOG_CROPPING = 834;
 
     // private static final String TAG = "CropImage";
 
@@ -155,8 +159,24 @@ public class CropImage extends MonitoredActivity {
 
         startFaceDetection();
     }
+    
+    
 
-    private void startFaceDetection() {
+    @Override
+	protected Dialog onCreateDialog(int id) {
+		if (id == DIALOG_CROPPING) {
+			ProgressDialog d = new ProgressDialog(this);
+			d.setMessage(getString(R.string.progress_cropping));
+			d.setIndeterminate(true);
+			d.setCancelable(false);
+			return d;
+		}
+		return super.onCreateDialog(id);
+	}
+
+
+
+	private void startFaceDetection() {
         if (isFinishing()) {
             return;
         }
@@ -304,9 +324,6 @@ public class CropImage extends MonitoredActivity {
     };
 
     private void onSaveClicked() {
-        // TODO this code needs to change to use the decode/crop/encode single
-        // step api so that we don't require that the whole (possibly large)
-        // bitmap doesn't have to be read into memory
         if (mCrop == null) {
             return;
         }
@@ -314,95 +331,135 @@ public class CropImage extends MonitoredActivity {
         if (mSaving)
             return;
         mSaving = true;
-
-        Bitmap croppedImage;
-
-        // If the output is required to a specific size, create an new image
-        // with the cropped image in the center and the extra space filled.
-        if (mOutputX != 0 && mOutputY != 0 && !mScale) {
-            // Don't scale the image but instead fill it so it's the
-            // required dimension
-            croppedImage = Bitmap.createBitmap(mOutputX, mOutputY,
-                    Bitmap.Config.RGB_565);
-            Canvas canvas = new Canvas(croppedImage);
-
-            Rect srcRect = mCrop.getCropRect();
-            Rect dstRect = new Rect(0, 0, mOutputX, mOutputY);
-
-            int dx = (srcRect.width() - dstRect.width()) / 2;
-            int dy = (srcRect.height() - dstRect.height()) / 2;
-
-            // If the srcRect is too big, use the center part of it.
-            srcRect.inset(Math.max(0, dx), Math.max(0, dy));
-
-            // If the dstRect is too big, use the center part of it.
-            dstRect.inset(Math.max(0, -dx), Math.max(0, -dy));
-
-            // Draw the cropped bitmap in the center
-            canvas.drawBitmap(mBitmap, srcRect, dstRect, null);
-
-            // Release bitmap memory as soon as possible
-            mImageView.clear();
-            mBitmap.recycle();
-        } else {
-            Rect r = mCrop.getCropRect();
-
-            int width = r.width();
-            int height = r.height();
-
-            // If we are circle cropping, we want alpha channel, which is the
-            // third param here.
-            croppedImage = Bitmap.createBitmap(width, height,
-                    Bitmap.Config.RGB_565);
-
-            Canvas canvas = new Canvas(croppedImage);
-            Rect dstRect = new Rect(0, 0, width, height);
-            canvas.drawBitmap(mBitmap, r, dstRect, null);
-
-            // Release bitmap memory as soon as possible
-            mImageView.clear();
-            mBitmap.recycle();
-
-            // If the required dimension is specified, scale the image.
-            if (mOutputX != 0 && mOutputY != 0 && mScale) {
-                croppedImage = transform(new Matrix(), croppedImage, mOutputX,
-                        mOutputY, mScaleUp, RECYCLE_INPUT);
-            }
-        }
-
-        mImageView.setImageBitmapResetBase(croppedImage, true);
-        mImageView.center(true, true);
-        mImageView.mHighlightViews.clear();
         
-        Uri returnedUri = null;
-        
-        if (StorageTricks.checkExtStorage()) {
-        	try {
-	        	FileOutputStream outputStream = new FileOutputStream(StorageTricks.CAMERA_TEMP_FILE);
-	        	croppedImage.compress(CompressFormat.JPEG, mSaveQuality, outputStream);
-	        	outputStream.close();
-	        	
-	        	returnedUri = StorageTricks.putImageFileIntoGalleryAndGetUri(this, StorageTricks.CAMERA_TEMP_FILE, true);
-	        	croppedImage.recycle();
-        	} catch(Exception e) {
-        		e.printStackTrace();
-        		try {
-        			croppedImage.recycle();
-        		} catch (Exception e1) {}
-        		StorageTricks.CAMERA_TEMP_FILE.delete();
-        	}
-        }
-
-        if (returnedUri == null) {
-        	setResult(RESULT_CANCELED);
-        } else {
-        	Intent i = new Intent();
-        	i.setData(returnedUri);
-        	setResult(RESULT_OK, i);
-        }
-        finish();
+        new CropTask().execute((Void)null);
     }
 
+
+    private class CropTask extends AsyncTask<Void, Void, Void> {
+    	
+    	Uri returnedUri = null;
+
+		@Override
+		protected void onPreExecute() {
+			showDialog(DIALOG_CROPPING);
+			mImageView.clear();
+			mImageView.mHighlightViews.clear();
+			super.onPreExecute();
+		}
+		
+		@Override
+		protected Void doInBackground(Void... params) {
+			doCropAndSave();
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			try {
+				dismissDialog(DIALOG_CROPPING);
+			} catch (Exception e) {
+				//empty
+			}
+			
+	        if (returnedUri == null) {
+	        	setResult(RESULT_CANCELED);
+	        } else {
+	        	Intent i = new Intent();
+	        	i.setData(returnedUri);
+	        	setResult(RESULT_OK, i);
+	        }
+	        finish();
+			super.onPostExecute(result);
+		}
+
+	    private void doCropAndSave() {
+	        // TODO this code needs to change to use the decode/crop/encode single
+	        // step api so that we don't require that the whole (possibly large)
+	        // bitmap doesn't have to be read into memory
+
+
+	        Bitmap croppedImage;
+
+	        // If the output is required to a specific size, create an new image
+	        // with the cropped image in the center and the extra space filled.
+	        if (mOutputX != 0 && mOutputY != 0 && !mScale) {
+	            // Don't scale the image but instead fill it so it's the
+	            // required dimension
+	            croppedImage = Bitmap.createBitmap(mOutputX, mOutputY,
+	                    Bitmap.Config.RGB_565);
+	            Canvas canvas = new Canvas(croppedImage);
+
+	            Rect srcRect = mCrop.getCropRect();
+	            Rect dstRect = new Rect(0, 0, mOutputX, mOutputY);
+
+	            int dx = (srcRect.width() - dstRect.width()) / 2;
+	            int dy = (srcRect.height() - dstRect.height()) / 2;
+
+	            // If the srcRect is too big, use the center part of it.
+	            srcRect.inset(Math.max(0, dx), Math.max(0, dy));
+
+	            // If the dstRect is too big, use the center part of it.
+	            dstRect.inset(Math.max(0, -dx), Math.max(0, -dy));
+
+	            // Draw the cropped bitmap in the center
+	            canvas.drawBitmap(mBitmap, srcRect, dstRect, null);
+
+	            // Release bitmap memory as soon as possible
+//	            mImageView.clear();
+	            mBitmap.recycle();
+	        } else {
+	            Rect r = mCrop.getCropRect();
+
+	            int width = r.width();
+	            int height = r.height();
+
+	            // If we are circle cropping, we want alpha channel, which is the
+	            // third param here.
+	            croppedImage = Bitmap.createBitmap(width, height,
+	                    Bitmap.Config.RGB_565);
+
+	            Canvas canvas = new Canvas(croppedImage);
+	            Rect dstRect = new Rect(0, 0, width, height);
+	            canvas.drawBitmap(mBitmap, r, dstRect, null);
+
+	            // Release bitmap memory as soon as possible
+//	            mImageView.clear();
+	            mBitmap.recycle();
+
+	            // If the required dimension is specified, scale the image.
+	            if (mOutputX != 0 && mOutputY != 0 && mScale) {
+	                croppedImage = transform(new Matrix(), croppedImage, mOutputX,
+	                        mOutputY, mScaleUp, RECYCLE_INPUT);
+	            }
+	        }
+
+//	        mImageView.setImageBitmapResetBase(croppedImage, true);
+//	        mImageView.center(true, true);
+//	        mImageView.mHighlightViews.clear();
+	        
+//	        Uri returnedUri = null;
+	        
+	        if (StorageTricks.checkExtStorage()) {
+	        	try {
+		        	FileOutputStream outputStream = new FileOutputStream(StorageTricks.CAMERA_TEMP_FILE);
+		        	croppedImage.compress(CompressFormat.JPEG, mSaveQuality, outputStream);
+		        	outputStream.close();
+		        	
+		        	returnedUri = StorageTricks.putImageFileIntoGalleryAndGetUri(CropImage.this, StorageTricks.CAMERA_TEMP_FILE, true);
+		        	croppedImage.recycle();
+	        	} catch(Exception e) {
+	        		e.printStackTrace();
+	        		try {
+	        			croppedImage.recycle();
+	        		} catch (Exception e1) {}
+	        		StorageTricks.CAMERA_TEMP_FILE.delete();
+	        	}
+	        }
+	    }
+    	
+    }
+    
     private static Bitmap transform(Matrix scaler, Bitmap source,
             int targetWidth, int targetHeight, boolean scaleUp, boolean recycle) {
         int deltaX = source.getWidth() - targetWidth;

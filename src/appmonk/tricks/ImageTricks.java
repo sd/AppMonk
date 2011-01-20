@@ -148,11 +148,11 @@ public class ImageTricks {
     }
     
     
-    public static Bitmap scaleDownBitmap(Bitmap original, int minDimension, boolean recycleOriginal) {
+    public static Bitmap scaleDownBitmap(Bitmap original, int maxDimension, boolean recycleOriginal) {
     	int origWidth = original.getWidth();
     	int origHeight = original.getHeight();
     	
-    	if (origWidth <= minDimension && origHeight <= minDimension) {
+    	if (origWidth <= maxDimension && origHeight <= maxDimension) {
     		Bitmap b = Bitmap.createBitmap(original);
     		if (recycleOriginal)
     			original.recycle();
@@ -165,10 +165,10 @@ public class ImageTricks {
     	float ratio = (float)origHeight / (float)origWidth;
     	
     	if (origWidth > origHeight) {
-    		newWidth = minDimension;
+    		newWidth = maxDimension;
     		newHeight = (int)((float)newWidth * ratio);
     	} else {
-    		newHeight = minDimension;
+    		newHeight = maxDimension;
     		newWidth = (int)((float)newHeight / ratio);
     	}
     	
@@ -178,13 +178,13 @@ public class ImageTricks {
     	return rtr;
     }
     
-    public static void scaleDownImageFile(File originalImageFile, int minDimension, CompressFormat format, int quality) {
+    public static void scaleDownImageFile(File originalImageFile, int maxDimension, CompressFormat format, int quality) {
     	Bitmap b = BitmapFactory.decodeFile(originalImageFile.getAbsolutePath());
     	if (b == null)
     		throw new RuntimeException("Original image could not be decoded.");
     	
     	try {
-	    	b = scaleDownBitmap(b, minDimension, true);
+	    	b = scaleDownBitmap(b, maxDimension, true);
 	    	originalImageFile.delete();
 	    	originalImageFile.createNewFile();
 	    	BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(originalImageFile));
@@ -195,20 +195,56 @@ public class ImageTricks {
     	}
     }
     
-    public static Uri scaleDownImageUri(Uri imageUri, int minDimension, CompressFormat format, int quality) {
+    public static Bitmap scaleDownImageUriToBitmap(Uri imageUri, int maxDimension, boolean deleteOriginal) {
     	try {
-	    	InputStream mediaStream = AppMonk.getContentResolver().openInputStream(imageUri);
-	    	Bitmap b = BitmapFactory.decodeStream(mediaStream);
-	    	mediaStream.close();
-	    	b = scaleDownBitmap(b, minDimension, true);
+    		InputStream mediaStream = AppMonk.getContentResolver().openInputStream(imageUri);
+        	Bitmap b = BitmapFactory.decodeStream(mediaStream);
+        	mediaStream.close();
+        	b = scaleDownBitmap(b, maxDimension, true);
+        	
+        	if (deleteOriginal)
+        		AppMonk.getContentResolver().delete(imageUri, null, null);
+        	return b;
+        	
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	return null;
+    }
+    
+    public static File scaleDownImageUriToFile(Uri imageUri, int maxDimension, CompressFormat format, int quality, boolean deleteOriginal) {
+    	if (!StorageTricks.checkExtStorage())
+    		return null;
+
+    	Bitmap b = scaleDownImageUriToBitmap(imageUri, maxDimension, deleteOriginal);
+    	if (b == null) 
+    		return null;
+    	
+    	try {
+        	
+        	File tmpFile = new File(StorageTricks.CAMERA_TEMP_DIR, "scaledImage." + (format == CompressFormat.JPEG ? "jpg" : "png"));
+        	tmpFile.createNewFile();
+        	BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(tmpFile));
+        	b.compress(format, quality, outputStream);
+        	
+        	outputStream.close();
+        	b.recycle();
+        	
+        	
+        	return tmpFile;
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	return null;
+    	
+    }
+    
+    public static Uri scaleDownImageUri(Uri imageUri, int maxDimension, CompressFormat format, int quality, boolean deleteOriginal) {
+    	try {
+	    	File tmpFile = scaleDownImageUriToFile(imageUri, maxDimension, format, quality, deleteOriginal);
 	    	
-	    	File tmpFile = new File(Environment.getExternalStorageDirectory(), "scaledImage." + (format == CompressFormat.JPEG ? "jpg" : "png"));
-	    	tmpFile.createNewFile();
-	    	BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(tmpFile));
-	    	b.compress(format, quality, outputStream);
-	    	
-	    	outputStream.close();
-	    	b.recycle();
+	    	if (tmpFile == null)
+	    		return null;
 	    	
 	    	Uri rtr = Uri.parse(MediaStore.Images.Media.insertImage(AppMonk.getContentResolver(), tmpFile.getAbsolutePath(), null, null));
 	    	tmpFile.delete();
