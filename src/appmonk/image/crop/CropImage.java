@@ -19,7 +19,6 @@ package appmonk.image.crop;
 // originally from AOSP Camera code. modified to only do cropping and return 
 // data to caller. Removed saving to file, MediaManager, unneeded options, etc.
 
-import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,17 +30,16 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -385,8 +383,12 @@ public class CropImage extends MonitoredActivity {
 	        	outputStream.close();
 	        	
 	        	returnedUri = StorageTricks.putImageFileIntoGalleryAndGetUri(this, StorageTricks.CAMERA_TEMP_FILE, true);
+	        	croppedImage.recycle();
         	} catch(Exception e) {
         		e.printStackTrace();
+        		try {
+        			croppedImage.recycle();
+        		} catch (Exception e1) {}
         		StorageTricks.CAMERA_TEMP_FILE.delete();
         	}
         }
@@ -399,12 +401,6 @@ public class CropImage extends MonitoredActivity {
         	setResult(RESULT_OK, i);
         }
         finish();
-//        Bundle extras = new Bundle();
-//        extras.putParcelable(EXTRA_BITMAP_DATA, croppedImage);
-//        setResult(RESULT_OK, (new Intent()).setAction("inline-data").putExtras(
-//                extras));
-//        finish();
-        Log.e("TEST", "TRIED TO CALL FINISH");
     }
 
     private static Bitmap transform(Matrix scaler, Bitmap source,
@@ -679,10 +675,14 @@ class CropImageView extends ImageViewTouchBase {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        for (int i = 0; i < mHighlightViews.size(); i++) {
-            mHighlightViews.get(i).draw(canvas);
-        }
+    	try {
+	        super.onDraw(canvas);
+	        for (int i = 0; i < mHighlightViews.size(); i++) {
+	            mHighlightViews.get(i).draw(canvas);
+	        }
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
     }
 
     public void add(HighlightView hv) {
