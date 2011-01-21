@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -46,6 +47,16 @@ public class StorageTricks {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}	
+		}
+		return null;
+	}
+	
+	public static Uri putBitmapIntoGalleryAndGetUri(Context c, Bitmap image, boolean recycleOriginal) {
+		if (image != null) {
+			Uri dataUri = Uri.parse(MediaStore.Images.Media.insertImage(c.getContentResolver(), image, null, null));
+			if (recycleOriginal)
+				image.recycle();
+			return dataUri;	
 		}
 		return null;
 	}
