@@ -284,6 +284,14 @@ public class ImageTricks {
         return true;
     }
 
+    public static File _tempCameraFile = null;
+    
+    public static File tempCameraFile() {
+        if (_tempCameraFile == null)
+            _tempCameraFile = new File(ImageTricks.CAMERA_TEMP_DIR, ImageTricks.CAMERA_TEMP_FILE_NAME);
+        return _tempCameraFile;
+    }
+
     public static Uri putImageFileIntoGalleryAndGetUri(Context c, File imageFile, boolean deleteImageFileAfter) {
         if (imageFile.exists() && imageFile.isFile()) {
             try {

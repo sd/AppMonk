@@ -442,7 +442,7 @@ public class CropImage extends MonitoredActivity {
 //	        Uri returnedUri = null;
 	        
 	        if (ImageTricks.checkTempCameraDir()) {
-                File outFile = new File(ImageTricks.CAMERA_TEMP_DIR, ImageTricks.CAMERA_TEMP_FILE_NAME);
+                File outFile = ImageTricks.tempCameraFile();
 	        	try {
 		        	FileOutputStream outputStream = new FileOutputStream(outFile);
 		        	croppedImage.compress(CompressFormat.JPEG, mSaveQuality, outputStream);
