@@ -19,6 +19,7 @@ package appmonk.image.crop;
 // originally from AOSP Camera code. modified to only do cropping and return 
 // data to caller. Removed saving to file, MediaManager, unneeded options, etc.
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +48,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import appmonk.toolkit.R;
-import appmonk.tricks.StorageTricks;
+import appmonk.tricks.ImageTricks;
 
 /**
  * The activity can crop specific region of interest from an image.
@@ -440,20 +441,23 @@ public class CropImage extends MonitoredActivity {
 	        
 //	        Uri returnedUri = null;
 	        
-	        if (StorageTricks.checkExtStorage()) {
+	        if (ImageTricks.checkTempCameraDir()) {
+                File outFile = new File(ImageTricks.CAMERA_TEMP_DIR, ImageTricks.CAMERA_TEMP_FILE_NAME);
 	        	try {
-		        	FileOutputStream outputStream = new FileOutputStream(StorageTricks.CAMERA_TEMP_FILE);
+		        	FileOutputStream outputStream = new FileOutputStream(outFile);
 		        	croppedImage.compress(CompressFormat.JPEG, mSaveQuality, outputStream);
 		        	outputStream.close();
 		        	
-		        	returnedUri = StorageTricks.putImageFileIntoGalleryAndGetUri(CropImage.this, StorageTricks.CAMERA_TEMP_FILE, true);
+		        	returnedUri = ImageTricks.putImageFileIntoGalleryAndGetUri(CropImage.this, outFile, true);
 		        	croppedImage.recycle();
-	        	} catch(Exception e) {
+	        	} 
+	        	catch(Exception e) {
 	        		e.printStackTrace();
 	        		try {
 	        			croppedImage.recycle();
-	        		} catch (Exception e1) {}
-	        		StorageTricks.CAMERA_TEMP_FILE.delete();
+	        		} 
+	        		catch (Exception e1) {}
+	        		outFile.delete();
 	        	}
 	        }
 	    }

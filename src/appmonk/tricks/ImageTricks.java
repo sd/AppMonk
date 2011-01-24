@@ -2,10 +2,12 @@ package appmonk.tricks;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
@@ -20,6 +22,9 @@ import appmonk.image.ImageRequest;
 
 @SuppressWarnings("unused")
 public class ImageTricks {
+    public static final String CAMERA_TEMP_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/.tmp";
+    public static final String CAMERA_TEMP_FILE_NAME = "camera.jpg";
+    
     protected static Handler uiThreadHandler = null;
     
     public static class AsyncImageRequest extends AsyncTricks.AsyncRequest {
@@ -213,7 +218,7 @@ public class ImageTricks {
     }
     
     public static File scaleDownImageUriToFile(Uri imageUri, int maxDimension, CompressFormat format, int quality, boolean deleteOriginal) {
-    	if (!StorageTricks.checkExtStorage())
+    	if (!ImageTricks.checkTempCameraDir())
     		return null;
 
     	Bitmap b = scaleDownImageUriToBitmap(imageUri, maxDimension, deleteOriginal);
@@ -222,7 +227,7 @@ public class ImageTricks {
     	
     	try {
         	
-        	File tmpFile = new File(StorageTricks.CAMERA_TEMP_DIR, "scaledImage." + (format == CompressFormat.JPEG ? "jpg" : "png"));
+        	File tmpFile = new File(ImageTricks.CAMERA_TEMP_DIR, "scaledImage." + (format == CompressFormat.JPEG ? "jpg" : "png"));
         	tmpFile.createNewFile();
         	BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(tmpFile));
         	b.compress(format, quality, outputStream);
@@ -254,4 +259,53 @@ public class ImageTricks {
     	}
     }
 
+    public static boolean checkTempCameraDir() {
+        File dir = new File(CAMERA_TEMP_DIR);
+        if (!dir.exists()) {
+            try {
+                if (!dir.mkdirs())
+                    return false;
+            } 
+            catch (Exception e) {
+                return false;
+            }
+        }
+        
+        if (!dir.canWrite())
+            return false;
+        
+        File noMedia = new File(dir, ".nomedia");
+        try {
+            noMedia.createNewFile();
+        } 
+        catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    public static Uri putImageFileIntoGalleryAndGetUri(Context c, File imageFile, boolean deleteImageFileAfter) {
+        if (imageFile.exists() && imageFile.isFile()) {
+            try {
+                Uri dataUri = Uri.parse(MediaStore.Images.Media.insertImage(c.getContentResolver(), imageFile.getAbsolutePath(), null, null));
+                if (deleteImageFileAfter)
+                    imageFile.delete();
+                return dataUri;
+            } 
+            catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }   
+        }
+        return null;
+    }
+    
+    public static Uri putBitmapIntoGalleryAndGetUri(Context c, Bitmap image, boolean recycleOriginal) {
+        if (image != null) {
+            Uri dataUri = Uri.parse(MediaStore.Images.Media.insertImage(c.getContentResolver(), image, null, null));
+            if (recycleOriginal)
+                image.recycle();
+            return dataUri; 
+        }
+        return null;
+    }
 }
