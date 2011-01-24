@@ -20,6 +20,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class TextTricks {
     public static String join(List<String> list, String separator) {
@@ -94,4 +95,16 @@ public class TextTricks {
             hash = "0" + hash;
         return hash;
     }
+    
+    public static final Pattern REGEXP_PHONE_NUMBER_USA = Pattern.compile("^\\(?\\d{3}\\)?[- ]?\\d{3}[- ]?\\d{4}$");
+    public static final Pattern REGEXP_SIMPLE_EMAIL = Pattern.compile("^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,8}$");
+
+    public static boolean isValidPhoneNumber(String phoneNumber) {
+        return REGEXP_PHONE_NUMBER_USA.matcher(phoneNumber).matches();
+    }
+    
+    public static boolean isValidEmail(String email) {
+        return REGEXP_SIMPLE_EMAIL.matcher(email).matches();
+    }
+
 }
