@@ -159,7 +159,7 @@ public class ImageTricks {
     	
     	if (origWidth <= maxDimension && origHeight <= maxDimension) {
     		Bitmap b = Bitmap.createBitmap(original);
-    		if (recycleOriginal)
+    		if (recycleOriginal && (original != b))
     			original.recycle();
     		return b;
     	}
@@ -178,7 +178,7 @@ public class ImageTricks {
     	}
     	
     	Bitmap rtr = Bitmap.createScaledBitmap(original, newWidth, newHeight, false);
-    	if (recycleOriginal)
+    	if (recycleOriginal && original != rtr)
     		original.recycle();
     	return rtr;
     }
