@@ -1,10 +1,7 @@
 bin
-bin/classes.dex
-bin/com
-bin/resources.ap_
+bin/
 gen/
 local.properties
 .DS_Store
 .settings/
 .externalToolBuilders/
-.classpath
