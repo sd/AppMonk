@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 
+import com.groupme.android.Globals;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -203,13 +205,27 @@ public class ImageTricks {
     public static Bitmap scaleDownImageUriToBitmap(Uri imageUri, int maxDimension, boolean deleteOriginal) {
     	try {
     		InputStream mediaStream = AppMonk.getContentResolver().openInputStream(imageUri);
-        	Bitmap b = BitmapFactory.decodeStream(mediaStream);
+    		BitmapFactory.Options opts = new BitmapFactory.Options();
+    		opts.inJustDecodeBounds = true;
+        	BitmapFactory.decodeStream(mediaStream, null, opts);
         	mediaStream.close();
-        	b = scaleDownBitmap(b, maxDimension, true);
+            int outWidth = opts.outWidth;
+        	
+        	mediaStream = AppMonk.getContentResolver().openInputStream(imageUri);
+Globals.logd("Width: " + opts.outWidth + " target " + maxDimension);        	
+            opts = new BitmapFactory.Options();
+        	opts.inSampleSize = outWidth / maxDimension;
+        	
+Globals.logd("Sample size: " + opts.inSampleSize + " also " + (outWidth / maxDimension));
+            Bitmap bitmap = BitmapFactory.decodeStream(mediaStream, null, opts);
+        	
+        	mediaStream.close();
+
+//        	bitmap = scaleDownBitmap(bitmap, maxDimension, true);
         	
         	if (deleteOriginal)
         		AppMonk.getContentResolver().delete(imageUri, null, null);
-        	return b;
+        	return bitmap;
         	
     	} catch (Exception e) {
     		e.printStackTrace();
@@ -284,13 +300,13 @@ public class ImageTricks {
         return true;
     }
 
-    public static File _tempCameraFile = null;
+//    public static File _tempCameraFile = null;
     
-    public static File tempCameraFile() {
-        if (_tempCameraFile == null)
-            _tempCameraFile = new File(ImageTricks.CAMERA_TEMP_DIR, ImageTricks.CAMERA_TEMP_FILE_NAME);
-        return _tempCameraFile;
-    }
+//    public static File tempCameraFile() {
+//        if (_tempCameraFile == null)
+//            _tempCameraFile = new File(ImageTricks.CAMERA_TEMP_DIR, ImageTricks.CAMERA_TEMP_FILE_NAME);
+//        return _tempCameraFile;
+//    }
 
     public static Uri putImageFileIntoGalleryAndGetUri(Context c, File imageFile, boolean deleteImageFileAfter) {
         if (imageFile.exists() && imageFile.isFile()) {
