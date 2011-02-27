@@ -212,11 +212,10 @@ public class ImageTricks {
             int outWidth = opts.outWidth;
         	
         	mediaStream = AppMonk.getContentResolver().openInputStream(imageUri);
-Globals.logd("Width: " + opts.outWidth + " target " + maxDimension);        	
-            opts = new BitmapFactory.Options();
+
+        	opts = new BitmapFactory.Options();
         	opts.inSampleSize = outWidth / maxDimension;
         	
-Globals.logd("Sample size: " + opts.inSampleSize + " also " + (outWidth / maxDimension));
             Bitmap bitmap = BitmapFactory.decodeStream(mediaStream, null, opts);
         	
         	mediaStream.close();
