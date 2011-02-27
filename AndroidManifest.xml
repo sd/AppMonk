@@ -3,7 +3,7 @@
       package="appmonk.toolkit"
       android:versionCode="1"
       android:versionName="1.0">
-    <application android:icon="@drawable/icon" android:label="">
+    <application android:label="">
     </application>
     <uses-sdk android:minSdkVersion="3" />
 
