@@ -7,8 +7,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 
-import com.groupme.android.Globals;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
