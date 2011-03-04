@@ -72,23 +72,29 @@ public class ImageTricks {
             return uiThreadHandler;
         }
         
+        public void displayImage(Bitmap bitmap) {
+            imageView.setImageBitmap(bitmap);
+        }
+        
+        public void displayPlaceholder() {
+            if (defaultImageResource != 0)
+                imageView.setImageResource(defaultImageResource);
+            else
+                imageView.setImageBitmap(null);
+        }
+        
         @Override
         public boolean before() {
             if (imageRequest.isInMemory()) {
                 bitmap = imageRequest.getBitmap();
                 if (bitmap != null)
-                    imageView.setImageBitmap(bitmap);
-                else if (defaultImageResource != 0)
-                    imageView.setImageResource(defaultImageResource);
-                else
-                    imageView.setImageBitmap(null);
+                    displayImage(bitmap);
+                else 
+                    displayPlaceholder();
                 return false;
             }
             else {
-                if (defaultImageResource != 0)
-                    imageView.setImageResource(defaultImageResource);
-                else
-                    imageView.setImageBitmap(null);
+                displayPlaceholder();
     
                 return true;
             }
@@ -99,51 +105,31 @@ public class ImageTricks {
             bitmap = imageRequest.getBitmap();
         }
 
-        @Override
-        public void interrupted() {
+        public boolean markAsCompletedAndSeeIfStillMatches() {
             boolean stillMatchesRequest = false;
-
             synchronized (assignedRequests) {
                 String viewName = Integer.toString(imageView.hashCode());
                 String requestName = imageRequest.name();
                 String assignedName = assignedRequests.remove(viewName);
-                if (assignedName != null && assignedName.equals(requestName)) {
-                    stillMatchesRequest = true;
-                }
+                stillMatchesRequest = (assignedName != null && assignedName.equals(requestName));
             }
-
-            if (stillMatchesRequest) {
-                if (defaultImageResource != 0)
-                    imageView.setImageResource(defaultImageResource);
-                else
-                    imageView.setImageBitmap(null);
+            return stillMatchesRequest;
+        }
+        
+        @Override
+        public void interrupted() {
+            if (markAsCompletedAndSeeIfStillMatches()) {
+                displayPlaceholder();
             }
         }
 
         @Override
         public void after() {
-            boolean stillMatchesRequest = false;
-            
-            synchronized (assignedRequests) {
-                String viewName = Integer.toString(imageView.hashCode());
-                String requestName = imageRequest.name();
-                String assignedName = assignedRequests.remove(viewName);
-                if (assignedName != null && assignedName.equals(requestName)) {
-                    stillMatchesRequest = true;
-                }
-            }
-
-            if (stillMatchesRequest) {
-                if (bitmap != null) {
-                    // Log.d("XXX", "Image " + imageRequest.name() + " loaded onto " + imageView);
-                    imageView.setImageBitmap(bitmap);
-                }
-                else {
-                    if (defaultImageResource != 0)
-                        imageView.setImageResource(defaultImageResource);
-                    else
-                        imageView.setImageBitmap(null);
-                }
+            if (markAsCompletedAndSeeIfStillMatches()) {
+                if (bitmap != null)
+                    displayImage(bitmap);
+                else
+                    displayPlaceholder();
             }
         }
 
