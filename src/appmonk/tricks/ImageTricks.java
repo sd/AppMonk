@@ -57,11 +57,11 @@ public class ImageTricks {
         }
         
         public AsyncImageRequest(String url, ImageView view, int defaultResource) {
-            this(new ImageRequest().load(url), view, defaultResource);
+            this(new ImageRequest().load(url).cache(), view, defaultResource);
         }
 
         public AsyncImageRequest(String url, ImageView view) {
-            this(new ImageRequest().load(url), view, 0);
+            this(new ImageRequest().load(url).cache(), view, 0);
         }
         
         public String label() {
