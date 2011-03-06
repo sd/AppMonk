@@ -83,6 +83,10 @@ public class ImageTricks {
                 imageView.setImageBitmap(null);
         }
         
+        public void displayFallback() {
+            displayPlaceholder();
+        }
+
         @Override
         public boolean before() {
             if (imageRequest.isInMemory()) {
@@ -90,7 +94,7 @@ public class ImageTricks {
                 if (bitmap != null)
                     displayImage(bitmap);
                 else 
-                    displayPlaceholder();
+                    displayFallback();
                 return false;
             }
             else {
@@ -119,7 +123,7 @@ public class ImageTricks {
         @Override
         public void interrupted() {
             if (markAsCompletedAndSeeIfStillMatches()) {
-                displayPlaceholder();
+                displayFallback();
             }
         }
 
@@ -129,7 +133,7 @@ public class ImageTricks {
                 if (bitmap != null)
                     displayImage(bitmap);
                 else
-                    displayPlaceholder();
+                    displayFallback();
             }
         }
 
