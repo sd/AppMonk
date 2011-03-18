@@ -1,5 +1,7 @@
 package appmonk.tricks;
 
+import java.io.File;
+
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -73,6 +75,10 @@ public class AppMonk {
         } else {
             return null;
         }
+    }
+
+    public static File appFilePathFor(String name) {
+        return AppMonk.getContext().getFileStreamPath(IOTricks.sanitizeFileName(name));
     }
 
     protected static ContentResolver contentResolver = null;
