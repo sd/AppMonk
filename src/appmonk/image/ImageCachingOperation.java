@@ -11,6 +11,7 @@ import java.util.Map;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.CompressFormat;
+import android.text.TextUtils;
 import android.util.Log;
 
 public class ImageCachingOperation extends ImageRequest.Operation {
@@ -30,15 +31,26 @@ public class ImageCachingOperation extends ImageRequest.Operation {
     public ImageCachingOperation(ImageRequest request, String variation) {
         super(request);
         String name = request.name(); // the name for this request, before this operation is added to the list
-        
-        cacheName = request.cacheNameFor(name, variation);
-        cacheFile = request.cacheFileFor(cacheName);
+        if (TextUtils.isEmpty(name)) {
+               cacheName = null;
+              cacheFile = null;
+        }
+        else {
+             cacheName = request.cacheNameFor(name, variation);
+             cacheFile = request.cacheFileFor(cacheName);
+        }
     }
 
     public ImageCachingOperation(ImageRequest request, String name, String variation) {
         super(request);
-        cacheName = request.cacheNameFor(name, variation);
-        cacheFile = request.cacheFileFor(cacheName);
+        if (TextUtils.isEmpty(name)) {
+           cacheName = null;
+              cacheFile = null;
+        }
+        else {
+             cacheName = request.cacheNameFor(name, variation);
+             cacheFile = request.cacheFileFor(cacheName);
+        }
     }
     
     @Override
@@ -68,11 +80,17 @@ public class ImageCachingOperation extends ImageRequest.Operation {
     }
 
     public boolean isInMemory() {
+	if (cacheName == null)
+		return false;
+
         SoftReference<Bitmap> ref = memoryCache.get(cacheName);
         return (ref != null && ref.get() != null);
     }
     
     public boolean saveToCache(Bitmap bitmap) {
+	if (cacheName == null)
+		return false;
+
         memoryCache.put(cacheName, new SoftReference<Bitmap>(bitmap));
         
         try {
@@ -107,6 +125,9 @@ public class ImageCachingOperation extends ImageRequest.Operation {
     }
 
     public Bitmap loadFromCache() {
+	if (cacheName == null || cacheFile == null)
+		return null;
+
         Bitmap bitmap = null;
         
         SoftReference<Bitmap> ref = memoryCache.get(cacheName);

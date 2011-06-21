@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ImageView;
 import appmonk.image.ImageRequest;
@@ -57,7 +58,7 @@ public class ImageTricks {
         }
         
         public AsyncImageRequest(String url, ImageView view, int defaultResource) {
-            this(new ImageRequest().load(url).cache(), view, defaultResource);
+		this(new ImageRequest().load(url).cache(), view, defaultResource);
         }
 
         public AsyncImageRequest(String url, ImageView view) {
