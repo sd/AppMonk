@@ -44,6 +44,7 @@ import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnManagerParams;
+import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -109,12 +110,18 @@ public class SimpleHttpClient {
     public static int PUT = 3;
     public static int DELETE = 4;
 
+    public static interface ProgressListener {
+        public boolean progress(long total, long downloaded, long time);
+    }
+    
     public static class Response implements Serializable {
         private static final long serialVersionUID = 1L;
 
         transient HttpResponse httpResponse = null;
         URI uri = null;
         String body = null;
+        int bufferSize = 32 * 1024;
+        
         JSONObject jsonObject = null;
         JSONArray jsonArray = null;
         int status = -1;
@@ -146,6 +153,66 @@ public class SimpleHttpClient {
             return body;
         }
 
+        
+        public int bufferSize() {
+            return bufferSize;
+        }
+        
+        public void setBufferSize(int newSize) {
+            bufferSize = newSize;
+        }
+        
+        public boolean download(OutputStream destination) {
+            return download(destination, null);
+        }
+        
+        public boolean download(OutputStream destination, ProgressListener listener) {
+            try {
+                HttpEntity entity = httpResponse.getEntity();
+                InputStream source = entity.getContent();
+            
+                int bufferSize = bufferSize();
+                long totalSize = entity.getContentLength();
+                long startTime = System.currentTimeMillis();
+                long lastBufferTime = 0;
+                
+                byte[] buffer = new byte[bufferSize];
+
+                long currentSize = 0;
+                int len;
+
+                while ((len = source.read(buffer)) != -1) {
+                    destination.write(buffer, 0, len);
+                    currentSize += len;
+                    
+                    if (listener != null) {
+                        long time = System.currentTimeMillis();
+                        boolean ok = listener.progress(totalSize, currentSize, time - startTime);
+                        if (!ok) {
+                            entity.consumeContent();
+                            if (debug)
+                                Log.i(TAG, "Aborted download");
+                            return false;
+                        }
+                    }
+                }
+
+                entity.consumeContent();
+                
+                return true;
+            }
+            catch (IllegalStateException e) {
+                Log.e(TAG, "Error streaming response body", e);
+            }
+            catch (IOException e) {
+                Log.e(TAG, "Error streaming response body", e);
+            }
+            catch (Exception e) {
+                Log.e(TAG, "Error streaming response body", e);
+            }
+            return false;
+        }
+        
         public JSONObject asJSONObject() {
             if (jsonObject == null) {
                 try {
