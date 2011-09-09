@@ -1,6 +1,5 @@
 package appmonk.widget;
 
-import android.content.Context;
 import android.database.DataSetObserver;
 import android.view.View;
 import android.view.ViewGroup;

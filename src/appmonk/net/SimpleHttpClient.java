@@ -44,7 +44,6 @@ import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnManagerParams;
-import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -174,7 +173,6 @@ public class SimpleHttpClient {
                 int bufferSize = bufferSize();
                 long totalSize = entity.getContentLength();
                 long startTime = System.currentTimeMillis();
-                long lastBufferTime = 0;
                 
                 byte[] buffer = new byte[bufferSize];
 
@@ -601,12 +599,10 @@ public class SimpleHttpClient {
 
         StringBuilder sb = new StringBuilder();
         char[] buffer = new char[32 * 1024];
-        int total = 0;
         int len;
         try {
             while ((len = reader.read(buffer)) != -1) {
                 sb.append(buffer, 0, len);
-                total += len;
             }
         }
         catch (IOException e) {
