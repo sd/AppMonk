@@ -1,6 +1,5 @@
 package appmonk.net;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -78,7 +77,7 @@ public class SimpleHttpClient {
     public static boolean debug = false;
     
     protected BasicHttpContext httpContext;
-
+    
     public SimpleHttpClient() {
         httpContext = new BasicHttpContext();
     }
@@ -126,6 +125,13 @@ public class SimpleHttpClient {
         int status = -1;
         private boolean isRetry = false;
 
+        public void getAllData() {
+            httpResponse.getAllHeaders();
+            httpResponse.getStatusLine();
+            body();
+            status();
+        }
+        
         public String body() {
             if (body == null) {
                 try {
@@ -609,26 +615,6 @@ public class SimpleHttpClient {
             Log.e(TAG, "Error in streamToString", e);
         }
         return sb.toString();
-    }
-
-    private static File internalCacheDirectory = null;
-
-    public void setInternalCacheDirectory(File newCacheDirectory) {
-        internalCacheDirectory = newCacheDirectory;
-        if (!internalCacheDirectory.exists()) internalCacheDirectory.mkdir();
-    }
-
-    public static void purgeInternalCache(long maxAge) {
-        File files[] = internalCacheDirectory.listFiles();
-        long now = System.currentTimeMillis();
-        if (files != null) {
-            final int length = files.length;
-            for (int i = 0; i < length; i++) {
-                if (now - files[i].lastModified() > maxAge) {
-                    files[i].delete();
-                }
-            }
-        }
     }
 
     public Response get(String baseUri, String path, Map<String, String> params) {
