@@ -11,6 +11,8 @@ import appmonk.tricks.IOTricks;
 public class SimpleFileCache {
     protected static final String TAG = "AppMonk/Cache";
     
+    public boolean debug = false;
+    
     protected Context mContext = null;
     protected File mCacheDir = null;
 
@@ -21,8 +23,11 @@ public class SimpleFileCache {
         mCacheDir = new File(sdcard + "/Android/data/" + context.getPackageName() + "/cache/" + cacheName + "/");
 
         try {
-            if (!mCacheDir.exists())
+            if (!mCacheDir.exists()) {
+            	if (debug)
+            		Log.d(TAG, "Creating cache dir " + mCacheDir.getPath());
                 mCacheDir.mkdirs();
+            }
 
             File nomediaFile;
             
@@ -52,9 +57,15 @@ public class SimpleFileCache {
         return mCacheDir != null && Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
     }
     
-    public void touch(File cacheFile) {
+    public void touch(String name) {
         if (!cacheEnabled())
             return;
+        
+        String cleanName = IOTricks.sanitizeFileName(name);
+        File cacheFile = new File(mCacheDir, cleanName);
+
+        if (debug)
+        	Log.d(TAG, "Touching " + name + " (" + cacheFile.getPath() + ")");
         
         cacheFile.setLastModified(System.currentTimeMillis()); // Touch file for cache cleanup purposes
     }
@@ -67,10 +78,16 @@ public class SimpleFileCache {
         File cacheFile = new File(mCacheDir, cleanName);
         
         if (cacheFile.canRead()) {
+            if (debug)
+            	Log.d(TAG, "Removed " + name + " (" + cacheFile.getPath() + ")");
+            
             cacheFile.delete();
             return true;
         }
         else {
+            if (debug)
+            	Log.d(TAG, "Tried to remove but couldn't find " + name + " (" + cacheFile.getPath() + ")");
+
             return false;
         }
     }
@@ -83,12 +100,24 @@ public class SimpleFileCache {
         File cacheFile = new File(mCacheDir, cleanName);
 
         try {
-            if (System.currentTimeMillis() - cacheFile.lastModified() < maxAge)
+            if (System.currentTimeMillis() - cacheFile.lastModified() < maxAge) {
+                if (debug)
+                	Log.d(TAG, "Loading " + name + " (" + cacheFile.getPath() + ")");
+
                 return IOTricks.loadObject(cacheFile);
+            }
+            else {
+                if (debug)
+                	Log.d(TAG, "Did not load stale file " + name + " (" + cacheFile.getPath() + ")");
+            }
         }
         catch (IOException e) {
+            if (debug)
+            	Log.e(TAG, "-- IOException " + e.getMessage());
         }
         catch (ClassNotFoundException e) {
+            if (debug)
+            	Log.e(TAG, "-- ClassNotFoundException " + e.getMessage());
         }
 
         return null;
@@ -101,10 +130,15 @@ public class SimpleFileCache {
         String cleanName = IOTricks.sanitizeFileName(name);
         File cacheFile = new File(mCacheDir, cleanName);
         try {
+            if (debug)
+            	Log.d(TAG, "Storing " + name + " (" + cacheFile.getPath() + ")");
+
             IOTricks.saveObject(value, cacheFile);
             return true;
         }
         catch (IOException e) {
+            if (debug)
+            	Log.e(TAG, "-- IOException " + e.getMessage());
             return false;
         }
     }
