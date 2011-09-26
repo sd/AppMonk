@@ -16,4 +16,11 @@
   <string name="one_day_ago">a day ago</string>
   <string name="n_days_ago">%d days ago</string>
   <string name="in_the_future">in_the_future</string>
+
+  <string name="current">current</string>
+  <string name="less_than_one_hour_old">less than one hour old</string>
+  <string name="one_hour_old">one hour old</string>
+  <string name="n_hours_old">%d hours old</string>
+  <string name="one_day_old">one day old</string>
+  <string name="n_days_old">%d days old</string>
 </resources>

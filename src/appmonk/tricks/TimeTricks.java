@@ -36,6 +36,13 @@ public class TimeTricks {
     protected static String str_n_days_ago = "";
     protected static String str_in_the_future = "";
 
+    protected static String str_current = "";
+    protected static String str_less_than_one_hour_old = "";
+    protected static String str_one_hour_old = "";
+    protected static String str_n_hours_old = "";
+    protected static String str_one_day_old = "";
+    protected static String str_n_days_old = "";
+    
     public static void initializeResources() {
         if (initialized)
             return;
@@ -57,6 +64,13 @@ public class TimeTricks {
         str_one_day_ago = AppMonk.getString(R.string.one_day_ago);
         str_n_days_ago = AppMonk.getString(R.string.one_day_ago);
         str_in_the_future = AppMonk.getString(R.string.in_the_future);
+
+        str_current = AppMonk.getString(R.string.current);
+        str_less_than_one_hour_old = AppMonk.getString(R.string.less_than_one_hour_old);
+        str_one_hour_old = AppMonk.getString(R.string.one_hour_old);
+        str_n_hours_old = AppMonk.getString(R.string.n_hours_old);
+        str_one_day_old = AppMonk.getString(R.string.one_day_old);
+        str_n_days_old = AppMonk.getString(R.string.n_days_old);
     }
 
     public static Calendar isoStringToCalendar(String dateStr) {
@@ -148,6 +162,28 @@ public class TimeTricks {
         }
         else {
             return String.format(str_n_days_ago, (diff / (60 * 1000 * 60 * 24)));
+        }
+    }
+    
+    public static String ageInWords(long millis) {
+        long diff = System.currentTimeMillis() - millis;
+        if (diff < 0) {
+            return str_current;
+        }
+        else if (diff < (60 * 1000 * 60)) {
+            return str_less_than_one_hour_old;
+        }
+        else if (diff < (60 * 1000 * 60 * 2)) {
+            return str_one_hour_old;
+        }
+        else if (diff < (60 * 1000 * 60 * 24)) {
+            return String.format(str_n_hours_old, (diff / (60 * 1000 * 60)));
+        }
+        else if (diff < (60 * 1000 * 60 * 24 * 2)) {
+            return str_one_day_old;
+        }
+        else {
+            return String.format(str_n_days_old, (diff / (60 * 1000 * 60 * 24)));
         }
     }
 }
