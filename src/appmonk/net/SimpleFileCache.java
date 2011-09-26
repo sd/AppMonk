@@ -99,6 +99,12 @@ public class SimpleFileCache {
         String cleanName = IOTricks.sanitizeFileName(name);
         File cacheFile = new File(mCacheDir, cleanName);
 
+        if (!cacheFile.canRead()) {
+            if (debug)
+                Log.d(TAG, "Cache file not found for " + name + " (" + cacheFile.getPath() + ")");
+            return null;
+        }
+        
         try {
             if (maxAge <= 0 || (System.currentTimeMillis() - cacheFile.lastModified() < maxAge)) {
                 if (debug)
