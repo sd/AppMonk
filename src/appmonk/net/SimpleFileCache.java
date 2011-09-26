@@ -100,7 +100,7 @@ public class SimpleFileCache {
         File cacheFile = new File(mCacheDir, cleanName);
 
         try {
-            if (System.currentTimeMillis() - cacheFile.lastModified() < maxAge) {
+            if (maxAge <= 0 || (System.currentTimeMillis() - cacheFile.lastModified() < maxAge)) {
                 if (debug)
                 	Log.d(TAG, "Loading " + name + " (" + cacheFile.getPath() + ")");
 
