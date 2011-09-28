@@ -254,6 +254,7 @@ public class AsyncTricks {
 
         synchronized (requestQueue) {
             if (!replace && namedRequests.contains(request.label())) {
+                if (AsyncTricks.verboseDebug) Log.d(TAG, "Duplicate request, not queueing");
                 // There is already a pending request with the same name
                 request = null;
             }
@@ -265,6 +266,7 @@ public class AsyncTricks {
                     requestQueue.add(request);
                 }
                 else {
+                    if (AsyncTricks.verboseDebug) Log.d(TAG, "Request's 'before' returned false.");
                     request = null;
                 }
             }

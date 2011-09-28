@@ -5,7 +5,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -26,31 +32,100 @@ public class ImageTricks {
     public static final String CAMERA_TEMP_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/.tmp";
     public static final String CAMERA_TEMP_FILE_NAME = "camera.jpg";
     
-    protected static Handler uiThreadHandler = null;
+    protected static class RequestInfo {
+        String mName;
+        List<WeakReference<ImageView>> mViews;
+        boolean mIsNew = true;
+        
+        RequestInfo(String url) {
+            mName = url;
+            mViews = new ArrayList<WeakReference<ImageView>>();
+            mIsNew = true;
+        }
+        
+        static Map<String, RequestInfo> sInfos = new HashMap<String, RequestInfo>();
+        static Map<String, String> sNameForView = new HashMap<String, String>();
+        
+        void addView(ImageView view) {
+            synchronized (sInfos) {
+                String viewHashCode = Integer.toString(view.hashCode());
+                // First, if this widget is already included in another request, lets remove it before proceeding
+                // We save it using the hashcode as index because using a weakreference as a hash key doesn't work well
+                
+                String existingUrl = sNameForView.remove(viewHashCode);
+                if (existingUrl != null) {
+                    RequestInfo existingInfo = sInfos.get(existingUrl);
+                    if (existingInfo != null) {
+                        for (WeakReference<ImageView> ref : existingInfo.mViews) {
+                            ImageView v = ref.get();
+                            if (v != null && v == view) {
+                                existingInfo.mViews.remove(ref);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                sNameForView.put(viewHashCode, mName);
+                
+                for (WeakReference<ImageView> ref : mViews) {
+                    ImageView v = ref.get();
+                    if (v != null && v == view)
+                        return; // This Request already points to this widget
+                }
+                mViews.add(new WeakReference<ImageView>(view));
+            }
+        }
+        
+        void completed() {
+            synchronized (sInfos) {
+                for (WeakReference<ImageView> ref : mViews) {
+                    ImageView v = ref.get();
+                    if (v != null)
+                        sNameForView.remove(Integer.toString(v.hashCode()));
+                }
+                sInfos.remove(this);
+            }
+        }
+        
+        static RequestInfo get(String url) {
+            RequestInfo info;
+            
+            synchronized (sInfos) {
+                info = sInfos.get(url);
+                if (info == null) {
+                    info = new RequestInfo(url);
+                    sInfos.put(url, info);
+                }
+            }
+            
+            return info;
+        }
+    }
     
     public static class AsyncImageRequest extends AsyncTricks.AsyncRequest {
-        protected ImageRequest imageRequest;
-        protected ImageView imageView;
-        protected int defaultImageResource;
-        protected Bitmap bitmap = null;
-        
-        protected static HashMap<String, String> assignedRequests = new HashMap<String, String>();
+        protected static Handler sUiThreadHandler = null;
+
+        protected ImageRequest mImageRequest;
+        protected RequestInfo mInfo;
+        protected int mDefaultImageResource;
+        protected Bitmap mBitmap = null;
+        protected String mViewName = null;
+        protected String mRequestName = null;
         
         public AsyncImageRequest(ImageRequest request, ImageView view, int defaultResource) {
             super(AsyncTricks.INTERACTIVE);
             
-            imageRequest = request;
-            imageView = view;
-            defaultImageResource = defaultResource;
+            if (sUiThreadHandler == null)
+                sUiThreadHandler = new Handler();
             
-            if (uiThreadHandler == null)
-                uiThreadHandler = new Handler();
-            
-            synchronized (assignedRequests) {
-                String viewName = Integer.toString(view.hashCode());
-                String requestName = imageRequest.name();
-                assignedRequests.put(viewName, requestName);
-            }
+            mImageRequest = request;
+            mRequestName = mImageRequest.name();
+
+            mDefaultImageResource = defaultResource;
+
+            mInfo = RequestInfo.get(mRequestName);
+            mInfo.addView(view);
         }
         
         public AsyncImageRequest(ImageRequest request, ImageView view) {
@@ -66,22 +141,36 @@ public class ImageTricks {
         }
         
         public String label() {
-            return "loading image " + imageRequest.name() + " for view " + imageView.hashCode();
+            return "loading image " + mRequestName;
         }
         
         Handler handler() {
-            return uiThreadHandler;
+            return sUiThreadHandler;
         }
         
         public void displayImage(Bitmap bitmap) {
-            imageView.setImageBitmap(bitmap);
+            for (WeakReference<ImageView> ref : mInfo.mViews) {
+                ImageView v = ref.get();
+                if (v != null)
+                    v.setImageBitmap(bitmap);
+            }
         }
         
         public void displayPlaceholder() {
-            if (defaultImageResource != 0)
-                imageView.setImageResource(defaultImageResource);
-            else
-                imageView.setImageBitmap(null);
+            if (mDefaultImageResource != 0) {
+                for (WeakReference<ImageView> ref : mInfo.mViews) {
+                    ImageView v = ref.get();
+                    if (v != null)
+                        v.setImageResource(mDefaultImageResource);
+                }
+            }
+            else {
+                for (WeakReference<ImageView> ref : mInfo.mViews) {
+                    ImageView v = ref.get();
+                    if (v != null)
+                        v.setImageBitmap(null);
+                }
+            }
         }
         
         public void displayFallback() {
@@ -90,56 +179,57 @@ public class ImageTricks {
 
         @Override
         public boolean before() {
-            if (imageRequest.isInMemory()) {
-                bitmap = imageRequest.getBitmap();
-                if (bitmap != null)
-                    displayImage(bitmap);
-                else 
+            if (mImageRequest.isInMemory()) {
+                mBitmap = mImageRequest.getBitmap();
+                if (mBitmap != null) {
+                    displayImage(mBitmap);
+                    return false;
+                }
+                else { 
                     displayFallback();
-                return false;
+                }
             }
             else {
                 displayPlaceholder();
-    
-                return true;
             }
+            return true;
         }
 
         @Override
         public void request() {
-            bitmap = imageRequest.getBitmap();
+            mBitmap = mImageRequest.getBitmap();
         }
 
-        public boolean markAsCompletedAndSeeIfStillMatches() {
-            boolean stillMatchesRequest = false;
-            synchronized (assignedRequests) {
-                String viewName = Integer.toString(imageView.hashCode());
-                String requestName = imageRequest.name();
-                String assignedName = assignedRequests.remove(viewName);
-                stillMatchesRequest = (assignedName != null && assignedName.equals(requestName));
-            }
-            return stillMatchesRequest;
-        }
-        
         @Override
         public void interrupted() {
-            if (markAsCompletedAndSeeIfStillMatches()) {
-                displayFallback();
-            }
+            displayFallback();
+            mInfo.completed();
+            mInfo = null;
         }
 
         @Override
         public void after() {
-            if (markAsCompletedAndSeeIfStillMatches()) {
-                if (bitmap != null)
-                    displayImage(bitmap);
-                else
-                    displayFallback();
-            }
+            if (mBitmap != null)
+                displayImage(mBitmap);
+            else
+                displayFallback();
+            mInfo.completed();
+            mInfo = null;
         }
 
         public void queue() {
-            AsyncTricks.queueRequest(AsyncTricks.INTERACTIVE, this);
+            String existingRequest = null;
+            
+            if (mInfo.mIsNew) {
+                mInfo.mIsNew = false;
+                
+                if (existingRequest == null) {
+                    AsyncTricks.queueRequest(AsyncTricks.INTERACTIVE, this);
+                }
+                else {
+                    AsyncTricks.replaceRequest(AsyncTricks.INTERACTIVE, this);
+                }
+            }
         }
     }
     
